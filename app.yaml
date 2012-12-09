@@ -1,0 +1,17 @@
+application: whatsthebuzz2012
+version: 1
+runtime: python
+api_version: 1
+
+handlers:
+- url: /font
+  static_dir: font
+
+- url: /stylesheets
+  static_dir: stylesheets
+
+- url: /js
+  static_dir: js
+
+- url: /.*
+  script: main.py
