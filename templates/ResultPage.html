@@ -30,7 +30,32 @@
 	    <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
 	    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
 		<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
-	
+		
+		<script type='text/javascript' src='https://www.google.com/jsapi'></script>
+    	<script type='text/javascript'>
+      		google.load('visualization', '1', {packages:['gauge']});
+      		google.setOnLoadCallback(drawChart);
+		    function drawChart() {
+		        var data = google.visualization.arrayToDataTable([
+		          ['Label', 'Value'],
+		          ['Sentiment', {{sentiment_score|floatformat:2}}]
+		        ]);
+		
+		        var options = {
+		          width: 275, height: 275,
+		          min: -5, max: 5,
+		          redFrom: -5, redTo: -2,
+		          yellowFrom:-2, yellowTo: 2,
+		          greenFrom:2, greenTo: 5,
+		          majorTicks: ["-5","-4","-3","-2","-1","0","1","2","3","4","5"],
+		          minorTicks: 5
+		        };
+		
+		        var chart = new google.visualization.Gauge(document.getElementById('chart_div'));
+		        chart.draw(data, options);
+		    }
+		</script>
+		
 	</head>
 	
 	<body>
@@ -46,41 +71,44 @@
 				</div>
 			</div>
 		</div>
-	    
-		<div>
-			<p>Cumulative sentiment points: {{sentiment_points}}.</p>
-			<p>Num hits sentiment_list: {{hits}}.</p>
-			<p>The sentiment for your search {{search}} is {{sentiment_score}}.</p>
-		</div>
-
 		
-		<br>
-		<br>
-		<div class="container" >
-			  <table class="table table-bordered">
-			  		<thead>
-						<tr>
-							<th class="center">Search topic</th>
-							<th class="center">Sentiment</th>
-							<th class="center">Contributor</th>
-							<th class="center">Contributor photo</th>
-						</tr>
-					</thead>
-					<tbody>
-						{% for tweet in tweet_list %}	
+		<div class="container">
+			<div class="row">
+				<div class="span3">
+					<div>
+						<p>Your search: {{search}}</p>
+						<p>Sentiment points: {{sentiment_points}}.</p>
+						<p>Hits to sentiment_list: {{hits}}.</p>
+					</div>
+					<div>
+						<div id='chart_div'></div>
+					</div>
+				</div>
+				<div class="span9">
+			  		<table class="table table-bordered">
+				  		<thead>
 							<tr>
-								<td class="center">{{tweet}}</td>
-								<td class="center">{{sentiment}}</td>
-								<td class="center">{{contributor}}</td>
-								<td class="center">{{contibutor_photo}}</td>
-							</tr>							
-						{% endfor %}
-					</tbody>
-			  </table>
+								<th class="center">Search topic</th>
+								<th class="center">Sentiment</th>
+								<th class="center">Contributor</th>
+								<th class="center">Contributor photo</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for tweet in tweet_list %}	
+								<tr>
+									<td class="center">{{tweet}}</td>
+									<td class="center">{{sentiment}}</td>
+									<td class="center">{{contributor}}</td>
+									<td class="center">{{contibutor_photo}}</td>
+								</tr>							
+							{% endfor %}
+						</tbody>
+			  		</table>
+			  	</div>
+			</div>
 		</div> <!-- /container -->
-			
-			
-		
+
 
     <!-- Le javascript
     ================================================== -->
