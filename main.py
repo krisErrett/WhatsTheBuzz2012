@@ -52,16 +52,18 @@ class ResultPage(TemplatedPage):
     def post(self):
         search = self.request.get('search')
         # for URL encoding
-        search = string.replace(search, ' ', '%20')
-        for c in search:
+        search1 = search
+        for c in search1:
             if c in symbol_dict.keys():
-                search = string.replace(search, c, symbol_dict[c])             
-        
-        url = 'http://search.twitter.com/search.json?q=' + search + '&iso_language_code=en&page=10&rpp=100'
+                search1 = string.replace(search1, c, symbol_dict[c])             
+        search1 = string.replace(search1, ' ', '%20')
+        url = 'http://search.twitter.com/search.json?q=' + search1 + '&iso_language_code=en&page=10&rpp=100'
         
         results = urlfetch.fetch(url)
         results = json.loads(results.content)
         results = results['results']
+        
+        mem_list = []
 
         tweet_list = []
         for result in results:
@@ -75,7 +77,7 @@ class ResultPage(TemplatedPage):
             tweet.id = result['id']
             tweet.id_str = result['id_str']
             tweet.iso_language_code = result['iso_language_code']
-            #tweet.metadata = result['metadata']
+            tweet.metadata = str(result['metadata'])
             tweet.profile_image_url = result['profile_image_url']
             tweet.profile_image_url_https = result['profile_image_url_https']
             tweet.source = result['source']
@@ -85,6 +87,9 @@ class ResultPage(TemplatedPage):
             tweet.to_user_id = result['to_user_id']
             tweet.to_user_id_str = result['to_user_id_str']
             tweet.to_user_name = result['to_user_name']
+            if not mem_list:
+                mem_list.append(tweet.from_user)
+                mem_list.append(tweet.profile_image_url)
             #tweet.put() # store Tweet in datastore
         
         sentiment_points = 0
@@ -96,14 +101,40 @@ class ResultPage(TemplatedPage):
                 if word.lower() in sentiment_list.keys():                    
                     hits = hits + 1
            
-        sentiment_score = float(sentiment_points) / float(hits)            
+        sentiment_score = float(sentiment_points) / float(hits)
+        mem_list[0:0] = [sentiment_score] # makes buzz first list element
+        
+        mem = memcache.Client()
+        
+        config = mem.get('config')
+        if config is None:
+            config = [search]
+            mem.add('config',config)
+        elif search not in config:
+            config.append(search)   
+            mem.set('config', config)
+            mem.add(search, mem_list)
+        else:
+            mem.set(search, mem_list)
+        
+        buzz_dict = {}    
+        config = mem.get('config')
+        for key in config:
+            value = mem.get(key)
+            if value is None:
+                config.remove(key)
+                mem.set('config', config)
+            else:
+                buzz_dict[key] = value
+               
+            
+        # for memcache http://stackoverflow.com/questions/3611830/how-do-i-return-all-memcached-values-in-google-app-engineS    
             
         template_values = {
             'tweet_list':tweet_list,
             'search':search,
-            'sentiment_points': sentiment_points,
-            'hits':hits,
-            'sentiment_score':sentiment_score  
+            'sentiment_score':sentiment_score,
+            'buzz_dict':buzz_dict  
         }
         self.write_template(template_values)
                         

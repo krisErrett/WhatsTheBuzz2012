@@ -77,8 +77,6 @@
 				<div class="span3">
 					<div>
 						<p>Your search: {{search}}</p>
-						<p>Sentiment points: {{sentiment_points}}.</p>
-						<p>Hits to sentiment_list: {{hits}}.</p>
 					</div>
 					<div>
 						<div id='chart_div'></div>
@@ -95,12 +93,12 @@
 							</tr>
 						</thead>
 						<tbody>
-							{% for tweet in tweet_list %}	
+							{% for key, value in buzz_dict.items %}	
 								<tr>
-									<td class="center">{{tweet}}</td>
-									<td class="center">{{sentiment}}</td>
-									<td class="center">{{contributor}}</td>
-									<td class="center">{{contibutor_photo}}</td>
+									<td class="center">{{key}}</td>
+									<td class="center">{{value.0|floatformat:2}}</td>
+									<td class="center">{{value.1}}</td>
+									<td class="center" ><img src="{{value.2}}" class="img-polaroid"></td>
 								</tr>							
 							{% endfor %}
 						</tbody>
